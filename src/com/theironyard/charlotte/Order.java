@@ -9,94 +9,126 @@ import java.util.List;
  */
 public class Order {
 
-    Integer id;
-    Integer userId;
-    List<Item> items;
+    private int id;
+    private int user_id;
+    private boolean open;
 
-    public Order() {
-    }
-
-    public Order(Integer userId, boolean complete) {
-        this.userId = userId;
-    }
-
-    public Order(Integer id, Integer userId, boolean complete) {
+    public Order(int id, int user_id, boolean open) {
         this.id = id;
-        this.userId = userId;
+        this.user_id = user_id;
+        this.open = open;
     }
 
-    public List<Item> getItems() {
-        return items;
+    public Order(int user_id, boolean open) {
+        this.user_id = user_id;
+        this.open = open;
     }
 
-    public void setItems(List<Item> items) {
-        this.items = items;
+    public boolean isOpen() {
+        return open;
     }
 
-    public Integer getId() {
+    public void setOpen(boolean open) {
+        this.open = open;
+    }
+
+    public int getId() {
         return id;
     }
 
-    public void setId(Integer id) {
-        this.id = id;
+    private void setId(int id) { this.id = id; }
+
+    public int getUser_id() {
+        return user_id;
     }
 
-    public Integer getUserId() {
-        return userId;
+    public void setUser_id(int user_id) {
+        this.user_id = user_id;
     }
 
-    public void setUserId(Integer userId) {
-        this.userId = userId;
-    }
-    private static List<Item> getItemsforCurrentOrder(Connection connection, Integer orderId) throws SQLException {
-        List<Item> items = new ArrayList<>();
+    public static void createOrdersTable() {
+        try {
+            Statement stmt = Main.conn.createStatement();
 
-        if (orderId != null) {
-            PreparedStatement stmt = connection.prepareStatement("select * from items where order_id = ?");
-            stmt.setInt(1, orderId);
-
-            ResultSet results = stmt.executeQuery();
-
-            while (results.next()) {
-                String name = results.getString("name");
-                Integer quantity = results.getInt("quantity");
-                Double price = results.getDouble("price");
-                Integer currentOrder = orderId;
-                items.add(new Item(name, quantity, price, currentOrder));
-            }
+            stmt.execute("create table if not exists orders (id identity, user_id int, open boolean)");
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-        return items;
     }
 
-    public static void createTable(Connection conn) throws SQLException {
-        Statement stmt = conn.createStatement();
-        stmt.execute("CREATE TABLE IF NOT EXISTS orders (id IDENTITY, user_id INT)");
-    }
+    public static void insertOrder(Order order) {
+        try {
+            PreparedStatement stmt = Main.conn.prepareStatement("insert into orders values (NULL, ?, ?)", Statement.RETURN_GENERATED_KEYS);
+            stmt.setInt(1, order.getUser_id());
+            stmt.setBoolean(2, order.isOpen());
+            stmt.executeUpdate();
 
-    public static int createOrder(Connection conn, int userID) throws SQLException {
-        PreparedStatement stmt = conn.prepareStatement("insert into orders values (null, ?)", Statement.RETURN_GENERATED_KEYS);
-        stmt.setInt(1, userID);
-        stmt.executeUpdate();
-
-        ResultSet keys = stmt.getGeneratedKeys();
-
-        keys.next();
-
-        return keys.getInt(1);
-    }
-
-    public static Order getLatestCurrentOrder(Connection conn, Integer userId) throws SQLException {
-        Order order = null;
-
-        if (userId != null) {
-            PreparedStatement stmt = conn.prepareStatement("select top 1 * from orders where user_id = ? and complete = false");
-            stmt.setInt(1, userId);
-            ResultSet results  = stmt.executeQuery();
+            ResultSet results = stmt.getGeneratedKeys();
 
             if (results.next()) {
-                order = new Order(results.getInt("id"), results.getInt("user_id"), false);
+                order.setId(results.getInt(1));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void addItemToOrder(Order order, Item item) {
+        // insert into items values (NULL, item.getName(), item.getQuantity(), item.getPrice, order.getId());
+        try {
+            PreparedStatement stmt = Main.conn.prepareStatement("insert into items values (NULL, ?, ?, ?, ?)");
+            stmt.setString(1, item.getName());
+            stmt.setInt(2, item.getQuantity());
+            stmt.setDouble(3, item.getPrice());
+            stmt.setInt(4, order.getId());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public static List<Item> getItemsForOrder(Order order) {
+        List<Item> returnList = null;
+
+        if (order != null) {
+            // select * from items where order_id = order.getId();
+            try {
+                PreparedStatement stmt = Main.conn.prepareStatement("select * from items where order_id = ?");
+                stmt.setInt(1, order.getId());
+
+                ResultSet results = stmt.executeQuery();
+
+                while (results.next()) {
+                    if (returnList == null) {
+                        returnList = new ArrayList<>();
+                    }
+
+                    returnList.add(
+                            new Item(results.getInt("id"),
+                                    results.getString("name"),
+                                    results.getInt("quantity"),
+                                    results.getDouble("price")));
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
         }
-        return order;
+
+        return returnList;
+    }
+
+    public static void updateOrder(Order order) {
+        // update orders set user_id = ?, open = ? where id = order.getId();
+        try {
+            PreparedStatement stmt = Main.conn.prepareStatement("update orders set user_id = ?, open = ? where id = ?");
+            stmt.setInt(1, order.getUser_id());
+            stmt.setBoolean(2, order.isOpen());
+            stmt.setInt(3, order.getId());
+
+            stmt.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }

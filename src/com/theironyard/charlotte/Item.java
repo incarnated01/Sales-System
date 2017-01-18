@@ -9,12 +9,12 @@ import java.sql.Statement;
  * Created by stephenwilliamson on 1/15/17.
  */
 public class Item {
-    Integer id;
-    String name;
-    int quantity;
-    double price;
+    private int id;
+    private String name;
+    private int quantity;
+    private double price;
 
-    public Item(Integer id, String name, int quantity, double price) {
+    public Item(int id, String name, int quantity, double price) {
         this.id = id;
         this.name = name;
         this.quantity = quantity;
@@ -27,12 +27,8 @@ public class Item {
         this.price = price;
     }
 
-    public Integer getId() {
+    public int getId() {
         return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
     }
 
     public String getName() {
@@ -57,5 +53,15 @@ public class Item {
 
     public void setPrice(double price) {
         this.price = price;
+    }
+
+    public static void createItemsTable() {
+        try {
+            Statement stmt = Main.conn.createStatement();
+
+            stmt.execute("create table if not exists items (id identity, name varchar, quantity int, price double, order_id int)");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }
