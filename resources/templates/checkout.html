@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ch-ch-ch-check it out</title> <!-- What's it all about? -->
+</head>
+<body>
+<!-- Display the Current User Details -->
+{{#user}}
+<div>
+    <span>User: {{name}} ({{email}})</span>
+</div>
+{{/user}}
+
+
+<!-- List out the items. -->
+<ul>
+    {{#items}}
+    <li>
+        <dl>
+            <dt>Name</dt>
+            <dd>{{name}}</dd>
+
+            <dt>Quantity</dt>
+            <dd>{{quantity}}</dd>
+
+            <dt>Price</dt>
+            <dd>{{price}}</dd>
+        </dl>
+    </li>
+    {{/items}}
+</ul>
+
+
+<!-- Display a subtotal. -->
+<span>Your Total Today: {{subtotal}}</span>
+
+<span>Your order has been submitted.</span>
+<a href="/">Go back to the Homepage.</a>
+</body>
+</html>

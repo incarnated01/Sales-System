@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Home!</title>
+</head>
+<body>
+<h1>Home Page</h1>
+
+{{#user}}
+<span>Hello, {{name}}. Your email address is {{email}}.</span>
+
+<ul>
+    {{#items}}
+    <li>{{name}} | {{quantity}} | {{price}}</li>
+    {{/items}}
+</ul>
+
+<form action="/checkout" method="post">
+    <input type="submit" value="Check out!" />
+</form>
+
+{{^items}}
+<h2>Your Cart Contains No Items.</h2>
+{{/items}}
+
+<p>Add An Item:</p>
+<form action="/add-item" method="post">
+    <input type="text" name="name" placeholder="Item Name" />
+    <input type="number" name="quantity" placeholder="How many?" />
+    <input type="number" name="price" placeholder="How much?" step="0.01"/>
+    <input type="submit" />
+</form>
+{{/user}}
+
+{{^user}}
+<span>You are not logged in.</span>
+<a href="/login">Click Here to Login</a>
+{{/user}}
+</body>
+</html>
